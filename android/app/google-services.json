@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "465749590103",
+    "project_id": "anfaas-5147d",
+    "storage_bucket": "anfaas-5147d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:465749590103:android:bb7e5452384c2900866312",
+        "android_client_info": {
+          "package_name": "com.anfaasapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "465749590103-dmgcqfqh677674ho466a7grmd5o3rlob.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvfDHCEzalttEl8V3KMmJ7dcqUE8SInlE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "465749590103-dmgcqfqh677674ho466a7grmd5o3rlob.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
