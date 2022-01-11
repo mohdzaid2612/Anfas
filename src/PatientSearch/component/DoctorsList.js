@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import {
   OT,
@@ -19,26 +20,62 @@ import {
   OTSubscriberView,
 } from 'opentok-react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 const dimensions = {
   width: Dimensions.get('window').width,
   height: Dimensions.get('window').height,
 };
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from 'react-navigation-hooks';
+import {URL} from '../../utils/constant';
+import store from '../../Store';
+import AsyncStorage from '@react-native-community/async-storage';
 
 const DoctorsList = ({doctors, onVideoCallClicked, closeBottomSheet}) => {
   const navigation = useNavigation();
-  const [apikey, setApikey] = useState('47298774');
-  const [sessionid, setSessionid] = useState(
-    '1_MX40NzI5ODc3NH5-MTYyOTQwMDE1NzY2NX5GSXlJNW5TZ0xVMjVxaHlIWlJtVVh5NmF-UH4',
-  );
-  const [token, setToken] = useState(
-    'T1==cGFydG5lcl9pZD00NzI5ODc3NCZzaWc9NDZjZjkwMWU4NzMxOTFjMDAyYWMxNzI5OWRkZmMxMzIzOTU3MzMyYTpzZXNzaW9uX2lkPTFfTVg0ME56STVPRGMzTkg1LU1UWXlPVFF3TURFMU56WTJOWDVHU1hsSk5XNVRaMHhWTWpWeGFIbElXbEp0VlZoNU5tRi1VSDQmY3JlYXRlX3RpbWU9MTYyOTQwMDE5NCZub25jZT0wLjIzNzAzMzA1MzE3NTQ0Mjc2JnJvbGU9cHVibGlzaGVyJmV4cGlyZV90aW1lPTE2Mjk0ODY1OTMmaW5pdGlhbF9sYXlvdXRfY2xhc3NfbGlzdD0=',
-  );
+  const [apikey, setApikey] = useState('');
+  const [sessionid, setSessionid] = useState('');
+  const [token, setToken] = useState('');
+  const [loader, setLoader] = useState(false);
 
-  const handleVideoClick = () => {
+  const handleVideoClick = async id => {
     closeBottomSheet();
-    navigation.navigate('VideoCall');
+    AsyncStorage.setItem('docID', JSON.stringify(id));
+    navigation.navigate('VideoCallBooking');
+
+    // const token = store.getState().auth ? store.getState().auth.token : '';
+
+    // console.warn('videoCallToken', token);
+    // var myHeaders = new Headers();
+    // myHeaders.append('Authorization', `Bearer ${token}`);
+    // myHeaders.append('Content-Type', 'application/json');
+
+    // var raw = JSON.stringify({
+    //   callto: 5,
+    // });
+
+    // var requestOptions = {
+    //   method: 'POST',
+    //   headers: myHeaders,
+    //   body: raw,
+    //   redirect: 'follow',
+    // };
+    // setLoader(true);
+    // fetch(URL.videoCall, requestOptions)
+    //   .then(response => response.json())
+    //   .then(result => {
+    //     setApikey(result?.key);
+    //     setSessionid(result?.session_id);
+    //     setToken(result?.token);
+    //     setLoader(false);
+    //     console.warn('SessionId', result?.session_id);
+    //     navigation.navigate('VideoCall', {
+    //       apiKey: result?.key,
+    //       sessionID: result?.session_id,
+    //       token: result?.token,
+    //     });
+    //   })
+    //   .catch(error => console.log('error', error));
   };
 
   return (
@@ -55,34 +92,55 @@ const DoctorsList = ({doctors, onVideoCallClicked, closeBottomSheet}) => {
                   style={[
                     styles.status,
                     {
-                      backgroundColor:
-                        item?.status == 'Available' ? '#079C54' : '#EC2A59',
+                      backgroundColor: item?.is_available
+                        ? '#079C54'
+                        : '#EC2A59',
                     },
                   ]}></View>
                 <View style={styles.innerDoctorCard}>
                   <View style={styles.doctorProfile}>
                     <View style={styles.doctorImage}>
-                      <Image
-                        style={{}}
-                        source={require('../../assets/Search/doctor.png')}
-                      />
+                      {item?.profile_image == null ? (
+                        <FontAwesome
+                          name="user"
+                          style={{fontSize: 36, color: '#ddd'}}
+                        />
+                      ) : (
+                        <Image
+                          style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: 40,
+                            resizeMode: 'contain',
+                          }}
+                          source={{
+                            uri: item?.profile_image,
+                          }}
+                        />
+                      )}
                     </View>
                   </View>
                   <View style={styles.doctorInfo}>
                     <View style={styles.doctorName}>
                       <Text numberOfLines={1} style={styles.doctorNameText}>
-                        {item?.name}
+                        {item?.first_name + ' ' + item?.last_name}
                       </Text>
                     </View>
-                    <View style={styles.doctorDetails}>
-                      <View style={styles.doctorSpecialityContainer}>
-                        <View>
-                          <Text numberOfLines={1} style={styles.specialityText}>
-                            Cardiography
-                          </Text>
+                    {item?.department == 'NOT DEFINED' ? null : (
+                      <View style={styles.doctorDetails}>
+                        <View style={styles.doctorSpecialityContainer}>
+                          <View>
+                            <Text
+                              numberOfLines={1}
+                              style={styles.specialityText}>
+                              {item?.department == 'NOT DEFINED'
+                                ? ''
+                                : item?.department}
+                            </Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
+                    )}
                     <View style={styles.callingFeature}>
                       <View style={styles.voiceCall}>
                         <TouchableOpacity style={styles.callingButton}>
@@ -100,21 +158,26 @@ const DoctorsList = ({doctors, onVideoCallClicked, closeBottomSheet}) => {
                         </TouchableOpacity>
                       </View>
                       <View style={styles.videoCall}>
-                        <TouchableOpacity
-                          onPress={handleVideoClick}
-                          style={styles.callingButton}>
-                          <MaterialCommunityIcons
-                            name="video-vintage"
-                            style={{
-                              fontSize: 18,
-                              marginRight: 5,
-                              color: '#F89853',
-                            }}
-                          />
-                          <Text style={{color: '#F89853', fontWeight: 'bold'}}>
-                            Video Call
-                          </Text>
-                        </TouchableOpacity>
+                        {loader ? (
+                          <ActivityIndicator color={'#F89853'} size="small" />
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => handleVideoClick(item?.id)}
+                            style={styles.callingButton}>
+                            <MaterialCommunityIcons
+                              name="video-vintage"
+                              style={{
+                                fontSize: 18,
+                                marginRight: 5,
+                                color: '#F89853',
+                              }}
+                            />
+                            <Text
+                              style={{color: '#F89853', fontWeight: 'bold'}}>
+                              Video Call
+                            </Text>
+                          </TouchableOpacity>
+                        )}
                       </View>
                     </View>
                   </View>
@@ -231,6 +294,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: '5%',
   },
   voiceCall: {
     height: 35,
@@ -247,7 +311,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 4,
-    marginTop: '5%',
+    // marginTop: '5%',
   },
   callingButton: {
     flexDirection: 'row',

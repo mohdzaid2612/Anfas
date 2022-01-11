@@ -30,16 +30,14 @@ const secondarySubscribersResolution = {width: 352, height: 288};
 class VideoCall extends Component {
   constructor(props) {
     super(props);
-    this.apiKey = '47298774';
-    this.sessionId =
-      '1_MX40NzI5ODc3NH5-MTYyOTUzODA4NjQ1NX4weEdoN0M4bHlFTVNnOGFCNTlmaGJjUFB-UH4';
-    this.token =
-      'T1==cGFydG5lcl9pZD00NzI5ODc3NCZzaWc9ODIyMmMzZTMwMzgzOGYyY2I1ODdiZGEzYmQxNjQ4NTMxYWU3MzI4YTpzZXNzaW9uX2lkPTFfTVg0ME56STVPRGMzTkg1LU1UWXlPVFV6T0RBNE5qUTFOWDR3ZUVkb04wTTRiSGxGVFZObk9HRkNOVGxtYUdKalVGQi1VSDQmY3JlYXRlX3RpbWU9MTYyOTUzODEwMiZub25jZT0wLjM3NDYzMTc3NjQzODI2MDczJnJvbGU9cHVibGlzaGVyJmV4cGlyZV90aW1lPTE2MzIxMzAxMDAmaW5pdGlhbF9sYXlvdXRfY2xhc3NfbGlzdD0=';
+    this.apiKey = props.navigation.getParam('apiKey');
+    this.sessionId = props.navigation.getParam('sessionID');
+    this.token = props.navigation.getParam('token');
     this.state = {
       subscriberIds: [], // Array for storing subscribers
       localPublishAudio: true, // Local Audio state
       localPublishVideo: true, // Local Video state
-      joinCall: false, // State variable for storing success
+      joinCall: true, // State variable for storing success
       streamProperties: {}, // Handle individual stream properties,
       mainSubscriberStreamId: null,
       frontCamera: true,
@@ -91,9 +89,6 @@ class VideoCall extends Component {
       streamDestroyed: event => {
         console.log('Publisher stream destroyed!', event);
       },
-      audioLevel: event => {
-        /* console.log('AudioLevel', typeof event); */
-      },
     };
 
     this.subscriberEventHandlers = {
@@ -107,8 +102,15 @@ class VideoCall extends Component {
         console.log('subscriberEventHandlers error:', error);
       },
     };
+
+    this.publisherProperties = {
+      cameraPosition: this.state.frontCamera ? 'front' : 'back',
+    };
   }
 
+  toggleCameraPosition = () => {
+    this.setState({frontCamera: !this.state.frontCamera});
+  };
   toggleAudio = () => {
     let publishAudio = this.state.localPublishAudio;
     this.publisherProperties = {
@@ -118,10 +120,6 @@ class VideoCall extends Component {
     this.setState({
       localPublishAudio: !publishAudio,
     });
-  };
-
-  toggleCameraPosition = () => {
-    this.setState({frontCamera: !this.state.frontCamera});
   };
 
   toggleVideo = () => {
@@ -148,6 +146,7 @@ class VideoCall extends Component {
     if (joinCall) {
       this.setState({joinCall: !joinCall});
     }
+    this.props.navigation.navigate('Home');
   };
 
   /**
@@ -296,17 +295,18 @@ class VideoCall extends Component {
         <OTSubscriberView
           streamId={subscribers[0]}
           key={subscribers[0]}
-          style={{
-            width: '100%',
-            height: '100%',
-            position: 'absolute',
-            zIndex: -1,
-          }}
+          style={{width: '100%', height: '100%'}}
         />
       </TouchableOpacity>
     ) : (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text>No one connected</Text>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#fff',
+        }}>
+        <Text>Ringing...</Text>
       </View>
     );
   };
@@ -321,65 +321,52 @@ class VideoCall extends Component {
             token={this.token}
             eventHandlers={this.sessionEventHandlers}
             options={{
-              enableStereoOutput: true,
               androidOnTop: 'publisher',
             }}>
             <OTPublisher
-              onTop
-              properties={{
-                cameraPosition: this.state.frontCamera ? 'front' : 'back',
-              }}
+              properties={this.publisherProperties}
               eventHandlers={this.publisherEventHandlers}
-              style={[styles.publisherStyle]}
+              style={styles.publisherStyle}
             />
             <OTSubscriber
-              style={{
-                height: dimensions.height,
-                width: dimensions.width,
-              }}
+              style={{height: dimensions.height, width: dimensions.width}}
               eventHandlers={this.subscriberEventHandlers}
               streamProperties={this.state.streamProperties}>
               {this.renderSubscribers}
             </OTSubscriber>
           </OTSession>
+        </View>
 
-          <View style={styles.buttonView}>
-            <TouchableOpacity
-              style={styles.iconStyle}
-              onPress={this.toggleAudio}>
-              <Icon
-                style={{fontSize: 24, color: '#fff'}}
-                name={this.state.localPublishAudio ? 'mic' : 'mic-off'}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconStyle}
-              onPress={this.toggleCameraPosition}>
-              <Icon
-                style={{fontSize: 24, color: '#fff'}}
-                name="flip-camera-ios"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.iconStyle, {backgroundColor: '#d9534f'}]}
-              onPress={this.endCall}>
-              <Icon
-                style={{fontSize: 24, color: '#fff'}}
-                name="call-end"
-                onPress={this.endCall}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.iconStyle}
-              onPress={this.toggleVideo}>
-              <Icon
-                style={{fontSize: 24, color: '#fff'}}
-                name={
-                  this.state.localPublishVideo ? 'videocam' : 'videocam-off'
-                }
-              />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.buttonView}>
+          <TouchableOpacity style={styles.iconStyle} onPress={this.toggleAudio}>
+            <Icon
+              style={{fontSize: 24, color: '#fff'}}
+              name={this.state.localPublishAudio ? 'mic' : 'mic-off'}
+            />
+          </TouchableOpacity>
+          {/* <TouchableOpacity
+            style={styles.iconStyle}
+            onPress={this.toggleCameraPosition}>
+            <Icon
+              style={{fontSize: 24, color: '#fff'}}
+              name="flip-camera-ios"
+            />
+          </TouchableOpacity> */}
+          <TouchableOpacity
+            style={[styles.iconStyle, {backgroundColor: '#d9534f'}]}
+            onPress={this.endCall}>
+            <Icon
+              style={{fontSize: 24, color: '#fff'}}
+              name="call-end"
+              onPress={this.endCall}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconStyle} onPress={this.toggleVideo}>
+            <Icon
+              style={{fontSize: 24, color: '#fff'}}
+              name={this.state.localPublishVideo ? 'videocam' : 'videocam-off'}
+            />
+          </TouchableOpacity>
         </View>
       </>
     );
@@ -387,29 +374,14 @@ class VideoCall extends Component {
 
   joinVideoCall = () => {
     return (
-      <SafeAreaView
-        style={[
-          styles.fullView,
-          {justifyContent: 'center', alignItems: 'center'},
-        ]}>
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#02044a',
-            width: '35%',
-            height: 50,
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderRadius: 10,
-          }}
-          onPress={this.joinCall}>
-          <Text style={{color: '#fff', fontSize: 18}}>Join call</Text>
-        </TouchableOpacity>
-        {/* <Button
-          title="Join Call"
+      <SafeAreaView style={styles.fullView}>
+        <Button
+          onPress={this.joinCall}
+          title="JoinCall"
           color="#841584"
           accessibilityLabel="Join call">
           Join Call
-        </Button> */}
+        </Button>
       </SafeAreaView>
     );
   };
@@ -445,9 +417,6 @@ const styles = StyleSheet.create({
   },
   fullView: {
     flex: 1,
-    // position: 'relative',
-    // justifyContent: 'center',
-    // alignItems: 'center',
   },
   scrollView: {
     // backgroundColor: Colors.lighter,

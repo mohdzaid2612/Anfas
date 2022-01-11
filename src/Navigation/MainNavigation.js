@@ -13,6 +13,10 @@ import ManageAppointment from '../Appointment/screen/ManageAppointment';
 import VideoCall from '../VideoCall/VideoCall';
 import Video from '../VideoCall/Video';
 
+import VideoCallBooking from '../VideoCallBooking/VideoCallBooking';
+import AppointmentStatus from '../VideoCallBooking/AppointmentStatus';
+import PaymentDetails from '../VideoCallBooking/PaymentDetails';
+
 import AddAppointment from '../AddAppointment/screen/AddAppointment';
 import AddPatient from '../AddPatient/screen/AddPatient';
 import PatientProfile from '../PatientProfile/screen/PatientProfile';
@@ -39,6 +43,9 @@ const HomeStack = createStackNavigator(
     Home: HomeScreen,
     Video: Video,
     VideoCall: VideoCall,
+    VideoCallBooking,
+    PaymentDetails,
+    AppointmentStatus,
     PatientHistory,
     PatientSearch,
     SelectCategory,

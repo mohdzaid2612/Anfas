@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Text,
   View,
@@ -60,6 +60,9 @@ import image2 from '../../assets/category/image2.png';
 import image3 from '../../assets/category/image3.png';
 
 import {useNavigation} from 'react-navigation-hooks';
+import store from '../../Store';
+import {URL} from '../../utils/constant';
+import {cos} from 'react-native-reanimated';
 
 const category = [
   {
@@ -156,6 +159,7 @@ const HomeHolder = props => {
   const navigation = useNavigation();
   const [value, setValue] = useState('');
   const [activeSlide, setActiveslide] = useState(0);
+  const [doctorsList, setDoctorsList] = useState([]);
   const ref = useRef();
   const carousalData = [
     {
@@ -198,6 +202,36 @@ const HomeHolder = props => {
       text: 'Cardio Specialist',
     },
   ];
+
+  useEffect(() => {
+    getDoctorsList();
+  }, []);
+
+  const getDoctorsList = async () => {
+    const token = store.getState().auth ? store.getState().auth.token : '';
+    var myHeaders = new Headers();
+    myHeaders.append('Authorization', `Bearer ${token}`);
+    myHeaders.append('Content-Type', 'application/json');
+
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders,
+    };
+
+    console.log(URL.doctorsList);
+    fetch(URL.doctorsList, requestOptions)
+      .then(response => response.json())
+      .then(result => {
+        var val = [];
+        val = result;
+        if (val.length == 0) {
+          setDoctorsList([]);
+        } else {
+          setDoctorsList(val);
+        }
+      })
+      .catch(error => console.log('error doctorsList', error));
+  };
 
   const pagination = () => {
     return (
@@ -262,13 +296,15 @@ const HomeHolder = props => {
             <TextInput
               style={bottomsheet.textInput}
               placeholder="Search Category"
+              // onChangeText={e => setValue(e)}
               value={value}
-              onChangeText={e => setValue(e)}
+              onChange={e => setValue(e)}
+              onSubmitEditing={() => {}}
             />
           </View>
         </View>
 
-        <View style={bottomsheet.categoryContainer}>
+        {/* <View style={bottomsheet.categoryContainer}>
           <View style={bottomsheet.innerCategoryContainer}>
             <FlatList
               data={category}
@@ -304,11 +340,11 @@ const HomeHolder = props => {
               }}
             />
           </View>
-        </View>
+        </View> */}
 
         <DoctorsList
           onVideoCallClicked={onVideoCallClicked}
-          doctors={doctors}
+          doctors={doctorsList}
           closeBottomSheet={closeBottomSheet}
         />
       </View>
@@ -496,6 +532,7 @@ const HomeHolder = props => {
         closeDuration={450}
         closeOnDragDown={true}
         dragFromTopOnly={true}
+        keyboardAvoidingViewEnabled={true}
         customStyles={{
           container: {
             justifyContent: 'center',
